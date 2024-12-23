@@ -1,0 +1,17 @@
+<?xml version="1.0"?>
+<opencv_storage>
+<rvec type_id="opencv-matrix">
+  <rows>3</rows>
+  <cols>1</cols>
+  <dt>d</dt>
+  <data type_id="binary">
+    MWQgICAgICAgICAgICAgICAgICAgICAgaLdFhoM2Qb+fbc9Zau8EQDIC2RL4y/u/
+    </data></rvec>
+<tvec type_id="opencv-matrix">
+  <rows>3</rows>
+  <cols>1</cols>
+  <dt>d</dt>
+  <data type_id="binary">
+    MWQgICAgICAgICAgICAgICAgICAgICAgcgR2Iuz8LUCNzj6K3zQDwCwHAiZ0MkJA
+    </data></tvec>
+</opencv_storage>

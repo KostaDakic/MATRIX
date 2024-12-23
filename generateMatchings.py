@@ -5,6 +5,7 @@ import socket
 import time
 import math
 import os
+import shutil
 
 def get_2d_points(client, drone_names, camera_name, image_type):
     all_detections = {}
@@ -52,7 +53,7 @@ def get_3d_points():
     try:
         with connect_to_server() as s:
             buffer = ""
-            while len(points_3d) < 300:  # Assuming we're looking for 25 planes
+            while len(points_3d) < 100: # number of planes
                 data = s.recv(1024).decode('utf-8')
                 if not data:
                     print("No data received, connection might be closed")
@@ -136,34 +137,57 @@ def calibrate_cameras(client, image_points, object_points, camera_name, timestep
         response = client.simGetImages([request], vehicle_name=drone)[0]
         image_size = (response.width, response.height)
 
-        _, mtx, dist, rvecs, tvecs = cv2.calibrateCamera(
-            [objpoints],  # List of object point sets (only one set in this case)
-            [imgpoints],  # List of image point sets (only one set in this case)
-            image_size,
-            cameraMatrix,
-            None,
-            flags=cv2.CALIB_USE_INTRINSIC_GUESS
-        )
+        try:
+            _, mtx, dist, rvecs, tvecs = cv2.calibrateCamera(
+                [objpoints],  # List of object point sets (only one set in this case)
+                [imgpoints],  # List of image point sets (only one set in this case)
+                image_size,
+                cameraMatrix,
+                None,
+                flags=cv2.CALIB_USE_INTRINSIC_GUESS
+            )
 
-        camera_matrices[drone] = mtx
-        dist_coeffs[drone] = dist
-        rvecs_dict[drone] = rvecs[0]
-        tvecs_dict[drone] = tvecs[0]
+            camera_matrices[drone] = mtx
+            dist_coeffs[drone] = dist
+            rvecs_dict[drone] = rvecs[0]
+            tvecs_dict[drone] = tvecs[0]
 
-        # Save intrinsic parameters
-        f = cv2.FileStorage(f'calibrations/intrinsic/intr_{drone}_{timestep:04d}.xml', flags=cv2.FILE_STORAGE_WRITE)
-        f.write(name='camera_matrix', val=mtx)
-        f.write(name='distortion_coefficients', val=dist)
-        f.release()
+            # Save intrinsic parameters
+            f = cv2.FileStorage(f'calibrations/intrinsic/intr_{drone}_{timestep:04d}.xml', flags=cv2.FILE_STORAGE_WRITE)
+            f.write(name='camera_matrix', val=mtx)
+            f.write(name='distortion_coefficients', val=dist)
+            f.release()
 
-        # Save extrinsic parameters
-        f = cv2.FileStorage(f'calibrations/extrinsic/extr_{drone}_{timestep:04d}.xml', flags=cv2.FileStorage_WRITE_BASE64)
-        f.write(name='rvec', val=rvecs[0])
-        f.write(name='tvec', val=tvecs[0])
-        f.release()
+            # Save extrinsic parameters
+            f = cv2.FileStorage(f'calibrations/extrinsic/extr_{drone}_{timestep:04d}.xml', flags=cv2.FileStorage_WRITE_BASE64)
+            f.write(name='rvec', val=rvecs[0])
+            f.write(name='tvec', val=tvecs[0])
+            f.release()
 
-    return camera_matrices, dist_coeffs, rvecs_dict, tvecs_dict
+        except Exception as e:
+            print(f"Unexpected error during calibration for {drone}: {e}")
+            # Try to copy the previous timestep's calibration files
+            prev_timestep = timestep - 1
+            if prev_timestep >= 0:
+                try:
+                    # Copy intrinsic parameters from previous timestep
+                    prev_intr_file = f'calibrations/intrinsic/intr_{drone}_{prev_timestep:04d}.xml'
+                    curr_intr_file = f'calibrations/intrinsic/intr_{drone}_{timestep:04d}.xml'
 
+                    if os.path.exists(prev_intr_file):
+                        shutil.copy2(prev_intr_file, curr_intr_file)
+                        print(f"Copied previous intrinsic calibration for {drone}")
+
+                    # Copy extrinsic parameters from previous timestep
+                    prev_extr_file = f'calibrations/extrinsic/extr_{drone}_{prev_timestep:04d}.xml'
+                    curr_extr_file = f'calibrations/extrinsic/extr_{drone}_{timestep:04d}.xml'
+
+                    if os.path.exists(prev_extr_file):
+                        shutil.copy2(prev_extr_file, curr_extr_file)
+                        print(f"Copied previous extrinsic calibration for {drone}")
+                except Exception as copy_error:
+                    print(f"Error copying previous calibration files for {drone}: {copy_error}")
+            continue
 
 def save_2d_3d_points(image_points, object_points, drone_names, timestep):
     os.makedirs('matchings', exist_ok=True)
@@ -190,7 +214,7 @@ def generate_matchings(client, camera_name, drone_names, object_points, timestep
 
     image_points = get_2d_points(client, drone_names, camera_name, airsim.ImageType.Scene)
 
-    camera_matrices, dist_coeffs, rvecs, tvecs = calibrate_cameras(client, image_points, object_points, camera_name, timestep)
+    calibrate_cameras(client, image_points, object_points, camera_name, timestep)
 
     save_2d_3d_points(image_points, object_points, drone_names, timestep)
 

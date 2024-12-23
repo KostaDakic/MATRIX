@@ -40,7 +40,7 @@ def get_drone_data(s, timeout=1):
     ped_data = {}
     buffer = ""
     start_time = time.time()
-    while len(ped_data) < 100 and time.time() - start_time < timeout:
+    while len(ped_data) < 10 and time.time() - start_time < timeout:
         try:
             ready, _, _ = select.select([s], [], [], timeout)
             if ready:
@@ -106,25 +106,18 @@ def get_pedestrian(client, camera_name, drone_names, timestep):
         s.setblocking(0)  # Set socket to non-blocking mode
         try:
             ped_data = get_drone_data(s)
-            if ped_data is None:
+            while ped_data is None:
                 print(f"Failed to get drone data. Attempting to reconnect...")
                 ue_client.reconnect()
                 s.close()
                 s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
                 s.connect((UE_HOST, UE_PORT))
                 s.setblocking(0)
-
-
-            # client.simPause(True)  # Pause the simulation
-            # capture_images(drone_names, camera_name, timestep)
+                ped_data = get_drone_data(s)
 
             # Process the results
             for cam, drone in enumerate(drone_names):
                 ped_matchings[drone].append(generate_matchings(ped_data, cam))
-
-
-            # Resume the simulation
-            # client.simPause(False)
 
         except Exception as e:
             print(f"An error occurred while collecting pedestrian points: {e}")

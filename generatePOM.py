@@ -1,7 +1,7 @@
 import os
 from datasetParameters import *
 from unitConversion import *
-from camera_visualizer import *
+import cv2
 
 def generate_cam_pom(rvec, tvec, cameraMatrix, distCoeffs):
     # WILDTRACK has irregular denotion: H*W=480*1440, normally x would be \in [0,1440), not [0,480)
@@ -29,13 +29,9 @@ def generate_cam_pom(rvec, tvec, cameraMatrix, distCoeffs):
     points_img, _ = cv2.projectPoints(centers3d, rvec, tvec, cameraMatrix, distCoeffs)
     points_img = points_img.squeeze()
     bbox[:, 3] = points_img[:, 1]
-    # offset = points_img[:, 0] - (bbox[:, 0] + bbox[:, 2]) / 2
-    # bbox[:, 0] += offset
-    # bbox[:, 2] += offset
     notvisible = np.zeros([centers3d.shape[0]])
     notvisible += (bbox[:, 0] >= IMAGE_WIDTH - 2) + (bbox[:, 1] >= IMAGE_HEIGHT - 2) + \
                   (bbox[:, 2] <= 1) + (bbox[:, 3] <= 1)
-    # notvisible += bbox[:, 2] - bbox[:, 0] > bbox[:, 3] - bbox[:, 1]  # w > h
     notvisible += (bbox[:, 2] - bbox[:, 0] > IMAGE_WIDTH / 3)  # + (bbox[:, 3] - bbox[:, 1] > IMAGE_HEIGHT / 3)
     return bbox.astype(int), notvisible.astype(bool)
 
@@ -59,8 +55,6 @@ def generate_POM(timestep):
         rvec = fp_calibration.getNode('rvec').mat().squeeze()
         tvec = fp_calibration.getNode('tvec').mat().squeeze()
         fp_calibration.release()
-
-        # visualize_camera(cameraMatrix, rvec, tvec, MAP_WIDTH, MAP_HEIGHT)
 
         bbox, notvisible = generate_cam_pom(rvec, tvec, cameraMatrix, distCoeffs)  # xmin,ymin,xmax,ymax
 

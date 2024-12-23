@@ -57,8 +57,8 @@ class CameraTracker:
 
         # Define the designated airspace
         self.airspace = {
-            'x': (-3, 3),
-            'y': (-3, 3),
+            'x': (-4, 4),
+            'y': (-4, 4),
             'z': (-8, -7)
         }
 
@@ -85,7 +85,7 @@ class CameraTracker:
         distance = np.linalg.norm([direction.x_val, direction.y_val, direction.z_val])
         if distance > 0.1:  # If drone is not very close to the target
             normalized_direction = direction / distance
-            velocity = normalized_direction * 1  # Adjust the multiplier to change speed
+            velocity = normalized_direction * 2  # Adjust  multiplier to change speed
 
             # Move drone
             self.client.moveByVelocityAsync(velocity.x_val, velocity.y_val, velocity.z_val,
@@ -252,14 +252,31 @@ if __name__ == '__main__':
     drone_names = [f"Drone{i}" for i in range(1, NUM_CAM + 1)]  # Drone1 to Drone8
 
     interval = 0.5
-    max_timesteps = 800
+    max_timesteps = 10
     visualise = False
 
+    # Define waypoints [(x, y, z), ...]
+    waypoints = [
+        (-3, -3, -8),
+        (0, -3, -8),
+        (3, -3, -8),
+        (3, 0, -8),
+        (3, 3, -8),
+        (0, 3, -8),
+        (-3, 3, -8),
+        (-3, 0, -8)
+    ]
+
     # Enable API control and take off for all drones
-    for drone in drone_names:
+    for i, drone in enumerate(drone_names):
         client.enableApiControl(True, drone)
         client.armDisarm(True, drone)
         client.takeoffAsync(vehicle_name=drone).join()
+
+        # Move to assigned waypoint
+        # x, y, z = waypoints[i]
+        # client.moveToPositionAsync(x, y, z, 1, vehicle_name=drone).join()
+        client.moveToPositionAsync(0, 0, -7, 1, vehicle_name=drone).join()
 
     tracker = CameraTracker(client, drone_names, interval, max_timesteps, visualise)
     tracker.track_objects()
@@ -271,6 +288,6 @@ if __name__ == '__main__':
         client.armDisarm(False, drone)
         client.enableApiControl(False, drone)
 
-    # for timestep in range(max_timesteps):
-    #     generate_POM(timestep)
-    #     annotate(timestep, max_timesteps)
+    for timestep in range(max_timesteps):
+        generate_POM(timestep)
+        annotate(timestep, max_timesteps)

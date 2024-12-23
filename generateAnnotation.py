@@ -143,18 +143,29 @@ def annotate(timestep, max_timestep):
                 bbox = tuple([anno_view['xmin'], anno_view['ymin'], anno_view['xmax'], anno_view['ymax']])
                 if bbox[0] != -1 and bbox[1] != -1:
                     cv2.rectangle(img, bbox[:2], bbox[2:], (0, 255, 0), 2)
-                    cv2.putText(img, f"ID: {anno['personID']}", (bbox[0], bbox[1]-10),
+                    cv2.putText(img, f"ID: {anno['personID']}", (bbox[0], bbox[1] - 10),
                                 cv2.FONT_HERSHEY_SIMPLEX, 0.9, (0, 255, 0), 2)
 
             img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
             axes[cam].imshow(img)
-            axes[cam].set_title(f'Camera {cam + 1}')
+            axes[cam].set_title(f'Camera {cam + 1}', pad=2)  # Reduce title padding
             axes[cam].axis('off')
 
-        plt.tight_layout()
-        plt.savefig(f'visualisation_LoS_{timestep:04d}.png')
-        plt.close()
+        # Option 1: Minimal spacing
+        plt.subplots_adjust(hspace=-0.7)  # Reduce vertical space even more
 
+        # Option 2: If you need even less space, you can try negative values
+        # plt.subplots_adjust(hspace=-0.1)
+
+        # Option 3: Alternative approach using GridSpec
+        # from matplotlib.gridspec import GridSpec
+        # gs = GridSpec(2, 4, height_ratios=[1, 1], hspace=-0.2)
+        # fig = plt.figure(figsize=(20, 15))
+        # axes = [fig.add_subplot(gs[i]) for i in range(8)]
+
+        plt.savefig(f'visualisation_LoS_{timestep:04d}.eps', format='eps', dpi=150, bbox_inches='tight',
+                    transparent=True)
+        plt.close()
 
 if __name__ == '__main__':
     max_timestep = 1
