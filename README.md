@@ -1,4 +1,4 @@
-# Multi-Drone City-Surveillance (MDCS) Dataset Generator
+# MATRIX (Multi-Aerial TRacking In compleX environments) Dataset Generator
 
 ## Overview
 
