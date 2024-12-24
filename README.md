@@ -15,6 +15,7 @@ The dataset with 1000 timesteps, 40 pedestrians on a 30m x 30m area can be downl
 - Utilizes eight drones for multi-angle data capture
 - Integrates with Unreal Engine using the AirSim plugin
 - Generates 2D bounding box matchings for pedestrians
+- Real-time Line of Sight (LoS) calculation between drones and subjects
 - Produces camera calibration data (intrinsic and extrinsic parameters)
 - Creates Probabilistic Occupancy Map (POM) for each timestep
 - Visualizes the grid system overlaid on captured images. Code adapted [from](https://github.com/hou-yz/MVDet/blob/master/grid_visualize.py)
@@ -22,7 +23,8 @@ The dataset with 1000 timesteps, 40 pedestrians on a 30m x 30m area can be downl
 ## Project Structure
 
 - `generateMatchings.py`: Calibrates each drone camera using a checkerboard pattern in the UE enviroment
-- `getPedestrian.py`: Captures pedestrian data 
+- `getPedestrian.py`: Captures pedestrian data
+- `pedestrianLoS.py`: Checks if pedestrian is within LoS of drone 
 - `generatePOM.py`: Creates Probabilistic Occupancy Maps
 - `generateAnnotation.py`: Generates annotations from the collected data
 - `grid_visualise.py`: Visualizes the grid system on captured images
