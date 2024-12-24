@@ -17,9 +17,9 @@ The dataset with 1000 timesteps, 40 pedestrians on a 30mx30m area can be downloa
 
 ## Prerequisites
 
-- Unreal Engine (version used in your project)
-- AirSim plugin for Unreal Engine
-- Python 3.x
+- Unreal Engine (5.2)
+- AirSim\Colosseum plugin for Unreal Engine, downloaded from [here](https://github.com/CodexLabsLLC/Colosseum) 
+- Python 3.10
 - Required Python libraries: 
   - airsim
   - numpy
@@ -105,21 +105,13 @@ You can customize various parameters in the scripts:
 - Check that the AirSim plugin is properly installed and configured in your Unreal Engine project.
 - Verify that the IP address and port in `getPedestrian.py` match your Unreal Engine server settings.
 
-## Contributing
-
-Contributions to improve the project are welcome. Please follow these steps:
-
-1. Fork the repository
-2. Create a new branch (`git checkout -b feature-branch`)
-3. Make your changes and commit (`git commit -am 'Add some feature'`)
-4. Push to the branch (`git push origin feature-branch`)
-5. Create a new Pull Request
-
 ## License
 
 [Specify your license here]
 
 ## Acknowledgments
 
-- Microsoft for the AirSim plugin
+- Microsoft for the [AirSim](https://microsoft.github.io/AirSim/api_docs/html/#) plugin
+- [MultiviewX toolkit](https://github.com/hou-yz/MultiviewX)
+- [Colosseum](https://github.com/CodexLabsLLC/Colosseum) Open source simulator for autonomous robotics
 - [Any other acknowledgments or credits]
