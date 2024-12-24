@@ -4,7 +4,10 @@
 
 This project implements a multi-camera multiview system designed to generate detection and tracking datasets using eight drones in an Unreal Engine environment. The drones, controlled via the AirSim plugin by Microsoft, fly randomly and capture images, creating a rich dataset for computer vision tasks.
 
-The dataset with 1000 timesteps, 40 pedestrians on a 30mx30m area can be downloaded [here](https://drive.google.com/file/d/1hSB72MSPQLEIL-9Hb0DoBnD5kyBjIHeF/view?usp=sharing).
+The dataset with 1000 timesteps, 40 pedestrians on a 30m x 30m area can be downloaded [here](https://drive.google.com/file/d/1hSB72MSPQLEIL-9Hb0DoBnD5kyBjIHeF/view?usp=sharing).
+
+The Unreal Engine environment can be made available upon request to build your own version. 
+Contact: kosta.dakic@outlook.com 
 
 ## Features
 
@@ -13,7 +16,7 @@ The dataset with 1000 timesteps, 40 pedestrians on a 30mx30m area can be downloa
 - Generates 2D bounding box matchings for pedestrians
 - Produces camera calibration data (intrinsic and extrinsic parameters)
 - Creates Probabilistic Occupancy Map (POM) for each timestep
-- Visualizes the grid system overlaid on captured images
+- Visualizes the grid system overlaid on captured images. code adapted [from](https://github.com/hou-yz/MVDet/blob/master/grid_visualize.py)
 
 ## Prerequisites
 
@@ -114,4 +117,5 @@ You can customize various parameters in the scripts:
 - Microsoft for the [AirSim](https://microsoft.github.io/AirSim/api_docs/html/#) plugin
 - [MultiviewX toolkit](https://github.com/hou-yz/MultiviewX)
 - [Colosseum](https://github.com/CodexLabsLLC/Colosseum) Open source simulator for autonomous robotics
-- [Any other acknowledgments or credits]
+- [MVDet](https://github.com/hou-yz/MVDet/tree/master)
+- [WILDTRACK](https://www.epfl.ch/labs/cvlab/data/data-wildtrack/)
