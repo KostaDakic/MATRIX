@@ -2,15 +2,15 @@
 
 ## Overview
 
-This project implements a multi-camera multiview system designed to generate detection and tracking datasets using six drones in an Unreal Engine environment. The drones, controlled via the AirSim plugin by Microsoft, fly randomly and capture images, creating a rich dataset for computer vision tasks.
+This project implements a multi-camera multiview system designed to generate detection and tracking datasets using eight drones in an Unreal Engine environment. The drones, controlled via the AirSim plugin by Microsoft, fly randomly and capture images, creating a rich dataset for computer vision tasks.
 
-[here](https://drive.google.com/file/d/1hSB72MSPQLEIL-9Hb0DoBnD5kyBjIHeF/view?usp=sharing).
+The dataset with 1000 timesteps, 40 pedestrians on a 30mx30m area can be downloaded [here](https://drive.google.com/file/d/1hSB72MSPQLEIL-9Hb0DoBnD5kyBjIHeF/view?usp=sharing).
 
 ## Features
 
-- Utilizes six drones for multi-angle data capture
+- Utilizes eight drones for multi-angle data capture
 - Integrates with Unreal Engine using the AirSim plugin
-- Generates 2D and 3D matchings for pedestrians and planes
+- Generates 2D bounding box matchings for pedestrians
 - Produces camera calibration data (intrinsic and extrinsic parameters)
 - Creates Probabilistic Occupancy Map (POM) for each timestep
 - Visualizes the grid system overlaid on captured images
