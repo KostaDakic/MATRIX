@@ -4,10 +4,11 @@
 
 This project implements a multi-camera multiview system designed to generate detection and tracking datasets using eight drones in an Unreal Engine environment. The drones, controlled via the AirSim plugin by Microsoft, fly randomly and capture images, creating a rich dataset for computer vision tasks.
 
-The dataset with 1000 timesteps, 40 pedestrians on a 30m x 30m area can be downloaded [here](https://drive.google.com/file/d/1hSB72MSPQLEIL-9Hb0DoBnD5kyBjIHeF/view?usp=sharing).
+![](https://i.giphy.com/media/v1.Y2lkPTc5MGI3NjExNjRqdDM3eHZtdnh0MTMxM2Eyc2k2MnQwODB5ZG4wZnBsYW1odGFqMyZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9cw/JKrospdoZH6rpza6tS/giphy.gif)
 
-The Unreal Engine environment can be made available upon request to build your own version. 
-Contact: kosta.dakic@outlook.com 
+## Download
+
+The dataset with 1000 timesteps, 40 pedestrians on a 30m x 30m area can be downloaded [here](https://drive.google.com/file/d/1hSB72MSPQLEIL-9Hb0DoBnD5kyBjIHeF/view?usp=sharing).
 
 ## Features
 
@@ -16,82 +17,74 @@ Contact: kosta.dakic@outlook.com
 - Generates 2D bounding box matchings for pedestrians
 - Produces camera calibration data (intrinsic and extrinsic parameters)
 - Creates Probabilistic Occupancy Map (POM) for each timestep
-- Visualizes the grid system overlaid on captured images. code adapted [from](https://github.com/hou-yz/MVDet/blob/master/grid_visualize.py)
-
-## Prerequisites
-
-- Unreal Engine (5.2)
-- AirSim\Colosseum plugin for Unreal Engine, downloaded from [here](https://github.com/CodexLabsLLC/Colosseum) 
-- Python 3.10
-- Required Python libraries: 
-  - airsim
-  - numpy
-  - opencv-python (cv2)
-  - matplotlib
-  - Pillow (PIL)
+- Visualizes the grid system overlaid on captured images. Code adapted [from](https://github.com/hou-yz/MVDet/blob/master/grid_visualize.py)
 
 ## Project Structure
 
-- `generateMatchings.py`: Generates 2D and 3D matchings for planes
-- `getPedestrian.py`: Captures pedestrian data and generates matchings
+- `generateMatchings.py`: Calibrates each drone camera using a checkerboard pattern in the UE enviroment
+- `getPedestrian.py`: Captures pedestrian data 
 - `generatePOM.py`: Creates Probabilistic Occupancy Maps
 - `generateAnnotation.py`: Generates annotations from the collected data
 - `grid_visualise.py`: Visualizes the grid system on captured images
 - `unitConversion.py`: Utility functions for coordinate conversions
 
-## Setup
+## Description of Available Files
 
-1. Install Unreal Engine and set up your environment.
-2. Install the AirSim plugin in your Unreal Engine project.
-3. Clone this repository to your local machine.
-4. Install required Python libraries:
-   ```
+The dataset provides:
+
+1. **Synchronized Frames**
+   - Extracted at 2 FPS
+   - Full HD resolution (1920×1080)
+
+2. **Calibration Files**
+   - Uses the Pinhole camera model
+   - Compatible with OpenCV library
+   - Both intrinsic and extrinsic calibrations included
+   - Updated for each timestep to account for drone movement
+
+3. **Ground Truth Annotations**
+   - Provided in JSON format
+   - Contains pedestrian positions and bounding boxes
+   - Line-of-Sight (LoS) information for each camera
+   - Probabilistic Occupancy Maps (POMs)
+
+4. **Position Data**
+   - World coordinate system mappings
+   - Grid-based position tracking
+   - Conversion utilities between coordinate systems
+     
+## Dataset Statistics
+
+For the standard configuration (1000 timesteps):
+- Number of pedestrians: 40
+- Coverage area: 30m x 30m
+- Total number of frames: 8,000 (1,000 per camera)
+
+## Dataset Generation
+
+To generate your own version of the dataset:
+
+1. **Environment Setup**
+   - Unreal Engine 5.2
+   - AirSim/Colosseum plugin ([download](https://github.com/CodexLabsLLC/Colosseum))
+   - Python 3.10 with required packages
+
+2. **Required Python Packages**
+   ```bash
    pip install airsim numpy opencv-python matplotlib Pillow
    ```
-5. Configure your Unreal Engine environment to match the expected setup (six drones, pedestrians, etc.).
 
-## Usage
-
-1. Start your Unreal Engine environment.
-
-2. Run the main scripts in the following order:
-
-   a. Generate matchings for planes:
-   ```
-   python generateMatchings.py
+3. **Generation Process**
+   ```bash
+   # Just run main.py
+   python main.py
    ```
 
-   b. Capture pedestrian data:
-   ```
-   python getPedestrian.py
-   ```
 
-   c. Generate Probabilistic Occupancy Maps:
-   ```
-   python generatePOM.py
-   ```
-
-   d. Generate annotations:
-   ```
-   python generateAnnotation.py
-   ```
-
-3. (Optional) Visualize the grid system:
+4. (Optional) Visualize the grid system:
    ```
    python grid_visualise.py
    ```
-
-## Output
-
-The system generates several types of output:
-
-- Images from each drone's camera
-- 2D and 3D matchings for planes and pedestrians
-- Camera calibration data (intrinsic and extrinsic parameters)
-- Probabilistic Occupancy Maps (POMs)
-- Annotations for detected objects
-
-All output files are saved in their respective directories within the project folder.
 
 ## Customization
 
@@ -108,9 +101,19 @@ You can customize various parameters in the scripts:
 - Check that the AirSim plugin is properly installed and configured in your Unreal Engine project.
 - Verify that the IP address and port in `getPedestrian.py` match your Unreal Engine server settings.
 
+## Contact
+
+For access to the Unreal Engine environment or questions about the dataset:
+- Email: kosta.dakic@outlook.com
+
 ## License
 
 [Specify your license here]
+
+## Citation
+
+If you use this dataset in your research, please cite:
+[Add citation information]
 
 ## Acknowledgments
 
