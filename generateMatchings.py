@@ -5,7 +5,6 @@ import socket
 import time
 import math
 import os
-import shutil
 
 def get_2d_points(client, drone_names, camera_name, image_type):
     all_detections = {}
@@ -30,55 +29,64 @@ def get_2d_points(client, drone_names, camera_name, image_type):
     return all_detections
 
 
-def get_3d_points():
-    HOST, PORT = '127.0.0.1', 8000
-
-    def connect_to_server():
-        while True:
-            try:
-                print(f"Attempting to connect to {HOST}:{PORT}")
-                s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-                s.connect((HOST, PORT))
-                print(f"Connected to {HOST}:{PORT}")
-                return s
-            except ConnectionRefusedError:
-                print(f"Connection to {HOST}:{PORT} was refused. Retrying in 5 seconds...")
-                time.sleep(5)
-            except Exception as e:
-                print(f"An error occurred: {e}. Retrying in 5 seconds...")
-                time.sleep(5)
-
+def get_3d_points(client):
+    # Dictionary to store the 3D points
     points_3d = {}
 
-    try:
-        with connect_to_server() as s:
-            buffer = ""
-            while len(points_3d) < 100: # number of planes
-                data = s.recv(1024).decode('utf-8')
-                if not data:
-                    print("No data received, connection might be closed")
-                    break
-                buffer += data
-                while '\n' in buffer:
-                    line, buffer = buffer.split('\n', 1)
-                    parts = line.strip().split(',')
-                    if len(parts) == 10 and parts[0].startswith('StaticMeshActor_UAID_4CEDF') and float(
-                            parts[3]) == -490.0:
-                        plane_name, x, y, z = parts[0], float(parts[1]), float(parts[2]), float(parts[3])
-                        if plane_name not in points_3d:
-                            points_3d[plane_name] = [x, y, z]
-                            print(f"Collected point for {plane_name}: X={x}, Y={y}, Z={z}")
-    except Exception as e:
-        print(f"An error occurred while collecting 3D points: {e}")
+    # Pattern to search for your static mesh actors
+    plane_pattern = "StaticMeshActor_UAID_4CEDF"
+
+    # Get all scene objects
+    max_attempts = 5
+    attempt = 0
+
+    while len(points_3d) < 300 and attempt < max_attempts:
+        attempt += 1
+        print(f"Attempt {attempt} to get scene objects")
+
+        try:
+            # Get all objects in the scene
+            object_names = client.simListSceneObjects()
+
+            # Filter objects based on pattern
+            plane_objects = [name for name in object_names if plane_pattern in name]
+
+            # Get pose for each matching object
+            for obj_name in plane_objects:
+                # Check if we already have this object
+                if obj_name in points_3d:
+                    continue
+
+                # Get pose of the object
+                pose = client.simGetObjectPose(obj_name)
+
+                # Extract coordinates
+                x, y, z = pose.position.x_val*100, pose.position.y_val*100, pose.position.z_val*-100
+
+                if int(z) == -490:
+                    points_3d[obj_name] = [x, y, z]
+                    print(f"Collected point for {obj_name}: X={x}, Y={y}, Z={z}")
+
+        except Exception as e:
+            print(f"An error occurred while collecting 3D points: {e}")
+            time.sleep(2)
 
     # Process 3D points
     object_points = []
     for obj_name, coords in points_3d.items():
-        plane_number = int(obj_name.split('_')[-1])
-        object_points.append([0, plane_number] + coords)
+        # Extract plane number from object name
+        try:
+            plane_number = int(obj_name.split('_')[-1])
+            object_points.append([0, plane_number] + coords)
+        except (ValueError, IndexError) as e:
+            print(f"Could not extract plane number from {obj_name}: {e}")
 
     # Save points to files
-    np.savetxt(f'matchings/Planes/3d.txt', object_points, fmt='%d %d %.6f %.6f %.6f')
+    if object_points:
+        np.savetxt(f'matchings/Planes/3d.txt', object_points, fmt='%d %d %.6f %.6f %.6f')
+        print(f"Saved {len(object_points)} points to matchings/Planes/3d.txt")
+    else:
+        print("No points to save")
 
     return points_3d
 
@@ -146,48 +154,30 @@ def calibrate_cameras(client, image_points, object_points, camera_name, timestep
                 None,
                 flags=cv2.CALIB_USE_INTRINSIC_GUESS
             )
-
-            camera_matrices[drone] = mtx
-            dist_coeffs[drone] = dist
-            rvecs_dict[drone] = rvecs[0]
-            tvecs_dict[drone] = tvecs[0]
-
-            # Save intrinsic parameters
-            f = cv2.FileStorage(f'calibrations/intrinsic/intr_{drone}_{timestep:04d}.xml', flags=cv2.FILE_STORAGE_WRITE)
-            f.write(name='camera_matrix', val=mtx)
-            f.write(name='distortion_coefficients', val=dist)
-            f.release()
-
-            # Save extrinsic parameters
-            f = cv2.FileStorage(f'calibrations/extrinsic/extr_{drone}_{timestep:04d}.xml', flags=cv2.FileStorage_WRITE_BASE64)
-            f.write(name='rvec', val=rvecs[0])
-            f.write(name='tvec', val=tvecs[0])
-            f.release()
-
         except Exception as e:
             print(f"Unexpected error during calibration for {drone}: {e}")
-            # Try to copy the previous timestep's calibration files
-            prev_timestep = timestep - 1
-            if prev_timestep >= 0:
-                try:
-                    # Copy intrinsic parameters from previous timestep
-                    prev_intr_file = f'calibrations/intrinsic/intr_{drone}_{prev_timestep:04d}.xml'
-                    curr_intr_file = f'calibrations/intrinsic/intr_{drone}_{timestep:04d}.xml'
-
-                    if os.path.exists(prev_intr_file):
-                        shutil.copy2(prev_intr_file, curr_intr_file)
-                        print(f"Copied previous intrinsic calibration for {drone}")
-
-                    # Copy extrinsic parameters from previous timestep
-                    prev_extr_file = f'calibrations/extrinsic/extr_{drone}_{prev_timestep:04d}.xml'
-                    curr_extr_file = f'calibrations/extrinsic/extr_{drone}_{timestep:04d}.xml'
-
-                    if os.path.exists(prev_extr_file):
-                        shutil.copy2(prev_extr_file, curr_extr_file)
-                        print(f"Copied previous extrinsic calibration for {drone}")
-                except Exception as copy_error:
-                    print(f"Error copying previous calibration files for {drone}: {copy_error}")
             continue
+
+
+        camera_matrices[drone] = mtx
+        dist_coeffs[drone] = dist
+        rvecs_dict[drone] = rvecs[0]
+        tvecs_dict[drone] = tvecs[0]
+
+        # Save intrinsic parameters
+        f = cv2.FileStorage(f'calibrations/intrinsic/intr_{drone}_{timestep:04d}.xml', flags=cv2.FILE_STORAGE_WRITE)
+        f.write(name='camera_matrix', val=mtx)
+        f.write(name='distortion_coefficients', val=dist)
+        f.release()
+
+        # Save extrinsic parameters
+        f = cv2.FileStorage(f'calibrations/extrinsic/extr_{drone}_{timestep:04d}.xml', flags=cv2.FileStorage_WRITE_BASE64)
+        f.write(name='rvec', val=rvecs[0])
+        f.write(name='tvec', val=tvecs[0])
+        f.release()
+
+    return camera_matrices, dist_coeffs, rvecs_dict, tvecs_dict
+
 
 def save_2d_3d_points(image_points, object_points, drone_names, timestep):
     os.makedirs('matchings', exist_ok=True)
@@ -214,7 +204,7 @@ def generate_matchings(client, camera_name, drone_names, object_points, timestep
 
     image_points = get_2d_points(client, drone_names, camera_name, airsim.ImageType.Scene)
 
-    calibrate_cameras(client, image_points, object_points, camera_name, timestep)
+    camera_matrices, dist_coeffs, rvecs, tvecs = calibrate_cameras(client, image_points, object_points, camera_name, timestep)
 
     save_2d_3d_points(image_points, object_points, drone_names, timestep)
 
