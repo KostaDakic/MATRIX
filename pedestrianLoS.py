@@ -72,6 +72,7 @@ def process_drone(detector: DroneDetector,
         if ped_id in geo_points:
             target = geo_points[ped_id][0]
             with detector.lock:  # Thread-safe line of sight check
+                target.altitude = home.altitude # need to add this for some reason
                 has_los = detector.client.simTestLineOfSightBetweenPoints(home, target)
 
             if has_los:
