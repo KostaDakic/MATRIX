@@ -99,12 +99,6 @@ You can customize various parameters in the scripts:
 - `getPedestrian.py`: Adjust pedestrian detection parameters or add new features
 - `generatePOM.py`: Fine-tune POM generation settings
 
-## Troubleshooting
-
-- Ensure that the Unreal Engine environment is running before executing the Python scripts.
-- Check that the AirSim plugin is properly installed and configured in your Unreal Engine project.
-- Verify that the IP address and port in `getPedestrian.py` match your Unreal Engine server settings.
-
 ## Contact
 
 For access to the Unreal Engine environment or questions about the dataset:
