@@ -11,6 +11,7 @@ from generateAnnotation import annotate
 from pedestrianLoS import save_pedestrian_los
 from datasetParameters import *
 
+
 class PIDController:
     def __init__(self, kp, ki, kd):
         self.kp = kp
@@ -26,6 +27,7 @@ class PIDController:
         self.previous_error = error
         return output
 
+
 class CameraTracker:
     def __init__(self, client, drone_names, interval, max_timesteps, visualise):
         self.visualise = visualise
@@ -37,10 +39,10 @@ class CameraTracker:
         self.image_height = 1080
         self.snapshot_count = {drone: 0 for drone in drone_names}
         self.num_cams = NUM_CAM
-        self.update_interval = interval # 0.5 seconds in simulation time
+        self.update_interval = interval  # 0.5 seconds in simulation time
         self.max_timesteps = max_timesteps
 
-        self.object_points = get_3d_points()
+        self.object_points = get_3d_points(self.client)
 
         # PID controllers for yaw and pitch (one set per drone)
         self.yaw_pid = {drone: PIDController(kp=0.0002, ki=0.00002, kd=0.0001) for drone in drone_names}
@@ -49,7 +51,8 @@ class CameraTracker:
         # Set up detection filters for each drone
         for drone in drone_names:
             self.client.simSetDetectionFilterRadius(self.camera_name, self.image_type, 200 * 100, vehicle_name=drone)
-            self.client.simAddDetectionFilterMeshName(self.camera_name, self.image_type, "Shape_Cone*", vehicle_name=drone)
+            self.client.simAddDetectionFilterMeshName(self.camera_name, self.image_type, "Shape_Cone*",
+                                                      vehicle_name=drone)
 
         if self.visualise:
             cv2.namedWindow("Camera View with Object Tracking", cv2.WINDOW_NORMAL)
@@ -57,8 +60,8 @@ class CameraTracker:
 
         # Define the designated airspace
         self.airspace = {
-            'x': (-4, 4),
-            'y': (-4, 4),
+            'x': (-3, 3),
+            'y': (-3, 3),
             'z': (-8, -7)
         }
 
@@ -82,13 +85,23 @@ class CameraTracker:
         direction = self.target_position[drone] - current_position
 
         # Normalize direction vector
-        distance = np.linalg.norm([direction.x_val, direction.y_val, direction.z_val])
+        # Fix for NumPy 2.0 compatibility
+        direction_array = np.array([direction.x_val, direction.y_val, direction.z_val])
+        distance = np.linalg.norm(direction_array)
+
         if distance > 0.1:  # If drone is not very close to the target
-            normalized_direction = direction / distance
-            velocity = normalized_direction * 2  # Adjust  multiplier to change speed
+            # Create normalized direction using individual components
+            normalized_x = direction.x_val / distance
+            normalized_y = direction.y_val / distance
+            normalized_z = direction.z_val / distance
+
+            # Move drone with velocity based on normalized direction
+            velocity_x = normalized_x * 1  # Adjust multiplier to change speed
+            velocity_y = normalized_y * 1
+            velocity_z = normalized_z * 1
 
             # Move drone
-            self.client.moveByVelocityAsync(velocity.x_val, velocity.y_val, velocity.z_val,
+            self.client.moveByVelocityAsync(velocity_x, velocity_y, velocity_z,
                                             self.update_interval, vehicle_name=drone)
         else:
             # If close to target, get a new random position
@@ -165,26 +178,25 @@ class CameraTracker:
 
         # Compute PID outputs
         yaw_adjustment = self.yaw_pid[drone].compute(error_x, self.update_interval)
-        pitch_adjustment = -self.pitch_pid[drone].compute(error_y, self.update_interval)  # Negative because pitch is inverted
+        pitch_adjustment = -self.pitch_pid[drone].compute(error_y,
+                                                          self.update_interval)  # Negative because pitch is inverted
 
         # Get current poses
         camera_pose = self.client.simGetCameraInfo(self.camera_name, vehicle_name=drone).pose
-        drone_pose = self.client.simGetVehiclePose(vehicle_name=drone)
 
         # Extract current orientations
-        current_pitch, _, current_yaw_cam = airsim.to_eularian_angles(camera_pose.orientation)
-        _, _, current_yaw = airsim.to_eularian_angles(drone_pose.orientation)
+        current_pitch, current_yaw, _ = airsim.to_eularian_angles(camera_pose.orientation)
 
         # Apply adjustments
         new_yaw = current_yaw + yaw_adjustment
         new_pitch = current_pitch + pitch_adjustment
 
         # Set new drone orientation
-        new_drone_pose = airsim.Pose(drone_pose.position, airsim.to_quaternion(0, 0, new_yaw))
-        self.client.simSetVehiclePose(new_drone_pose, False, drone)
+        # new_drone_pose = airsim.Pose(drone_pose.position, airsim.to_quaternion(0, 0, new_yaw))
+        # self.client.simSetVehiclePose(new_drone_pose, False, drone)
 
         # Set new camera orientation
-        new_camera_pose = airsim.Pose(airsim.Vector3r(0.5, 0, 0.1), airsim.to_quaternion(new_pitch, 0, 0))
+        new_camera_pose = airsim.Pose(airsim.Vector3r(0.5, 0, 0.1), airsim.to_quaternion(new_pitch, 0, new_yaw))
         self.client.simSetCameraPose(self.camera_name, new_camera_pose, vehicle_name=drone)
 
     def update_display(self, image, center, box, drone):
@@ -197,8 +209,10 @@ class CameraTracker:
             cv2.circle(image, center, 5, (0, 0, 255), -1)
             diff_x = center[0] - self.image_width / 2
             diff_y = center[1] - self.image_height / 2
-            cv2.putText(image, f"{drone} X diff: {diff_x:.2f}", (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 255, 255), 2)
-            cv2.putText(image, f"{drone} Y diff: {diff_y:.2f}", (10, 70), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 255, 255), 2)
+            cv2.putText(image, f"{drone} X diff: {diff_x:.2f}", (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 255, 255),
+                        2)
+            cv2.putText(image, f"{drone} Y diff: {diff_y:.2f}", (10, 70), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 255, 255),
+                        2)
 
         cv2.imshow("Camera View with Object Tracking", image)
         cv2.waitKey(1)
@@ -230,7 +244,7 @@ class CameraTracker:
                 if self.visualise:
                     self.update_display(image, object_center, box, drone)
 
-            save_pedestrian_los(self.client, self.drone_names, timestep)
+            # save_pedestrian_los(self.client, self.drone_names, timestep)
             generate_matchings(self.client, self.camera_name, self.drone_names, self.object_points, timestep)
             for droneSnap in self.drone_names:
                 self.take_snapshot(droneSnap)
@@ -252,8 +266,8 @@ if __name__ == '__main__':
     drone_names = [f"Drone{i}" for i in range(1, NUM_CAM + 1)]  # Drone1 to Drone8
 
     interval = 0.5
-    max_timesteps = 10
-    visualise = False
+    max_timesteps = 1000
+    visualise = True
 
     # Define waypoints [(x, y, z), ...]
     waypoints = [
@@ -288,6 +302,6 @@ if __name__ == '__main__':
         client.armDisarm(False, drone)
         client.enableApiControl(False, drone)
 
-    for timestep in range(max_timesteps):
-        generate_POM(timestep)
-        annotate(timestep, max_timesteps)
+    # for timestep in range(max_timesteps):
+    #     generate_POM(timestep)
+    #     annotate(timestep, max_timesteps)
