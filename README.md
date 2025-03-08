@@ -10,10 +10,12 @@ This project implements a multi-camera multiview system designed to generate det
 
 The dataset with 1000 timesteps, 40 pedestrians on a 30m x 30m area can be downloaded [here](https://drive.google.com/file/d/1hSB72MSPQLEIL-9Hb0DoBnD5kyBjIHeF/view?usp=sharing).
 
+Note that the downloaded dataset must be built with Visual Studio in order to do any editing on the Unreal Engine environment.
+
 ## Features
 
 - Utilizes eight drones for multi-angle data capture
-- Integrates with Unreal Engine using the AirSim plugin
+- It integrates with Unreal Engine using the AirSim plugin
 - Generates 2D bounding box matchings for pedestrians
 - Real-time Line of Sight (LoS) calculation between drones and subjects
 - Produces camera calibration data (intrinsic and extrinsic parameters)
