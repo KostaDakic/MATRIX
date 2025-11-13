@@ -111,7 +111,17 @@ For access to the Unreal Engine environment or questions about the dataset:
 ## Citation
 
 If you use this dataset in your research, please cite:
-[Add citation information]
+```
+@misc{dakic2025multidronemultiviewdatasetdeep,
+      title={A Multi-Drone Multi-View Dataset and Deep Learning Framework for Pedestrian Detection and Tracking}, 
+      author={Kosta Dakic and Kanchana Thilakarathna and Rodrigo N. Calheiros and Teng Joon Lim},
+      year={2025},
+      eprint={2511.08615},
+      archivePrefix={arXiv},
+      primaryClass={cs.CV},
+      url={https://arxiv.org/abs/2511.08615}, 
+}
+```
 
 ## Acknowledgments
 
