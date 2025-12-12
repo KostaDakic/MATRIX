@@ -4,6 +4,8 @@
 
 This project implements a multi-camera multiview system designed to generate detection and tracking datasets using eight drones in an Unreal Engine environment. The drones, controlled via the AirSim plugin by Microsoft, fly randomly and capture images, creating a rich dataset for computer vision tasks.
 
+[![Multi-Drone Multiview Pedestrian Detection and Tracking](https://img.youtube.com/vi/P6cYd8hYqO4/0.jpg)]([https://www.youtube.com/watch?v=VIDEO_ID](https://youtu.be/P6cYd8hYqO4)
+
 ![](https://i.giphy.com/media/v1.Y2lkPTc5MGI3NjExNjRqdDM3eHZtdnh0MTMxM2Eyc2k2MnQwODB5ZG4wZnBsYW1odGFqMyZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9cw/JKrospdoZH6rpza6tS/giphy.gif)
 
 ## Download
